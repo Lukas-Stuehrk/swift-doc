@@ -58,8 +58,9 @@ public struct SourceFile: Hashable, Codable {
         func symbol<Node: SyntaxProtocol>(_ node: Node, api: API) -> Symbol? {
             guard let documentation = try? Documentation.parse(node.documentation) else { return nil }
             let sourceLocation = sourceLocationConverter.location(for: node.position)
+            let endLocation = sourceLocationConverter.location(for: node.endPosition)
 
-            return Symbol(api: api, context: context, declaration: "\(api)", documentation: documentation, sourceLocation: sourceLocation)
+            return Symbol(api: api, context: context, declaration: "\(api)", documentation: documentation, sourceLocation: sourceLocation, endLocation: endLocation)
         }
 
         func push(_ symbol: Symbol?) {

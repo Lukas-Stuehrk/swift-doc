@@ -10,16 +10,18 @@ public final class Symbol {
     public let declaration: String
     public let documentation: Documentation?
     public let sourceLocation: SourceLocation?
+    public let endLocation: SourceLocation?
 
     public private(set) lazy var `extension`: Extension? = context.compactMap { $0 as? Extension }.first
     public private(set) lazy var conditions: [CompilationCondition] = context.compactMap { $0 as? CompilationCondition }
 
-    init(api: API, context: [Contextual], declaration: String?, documentation: Documentation?, sourceLocation: SourceLocation?) {
+    init(api: API, context: [Contextual], declaration: String?, documentation: Documentation?, sourceLocation: SourceLocation?, endLocation: SourceLocation?) {
         self.api = api
         self.context = context
         self.declaration = declaration ?? "\(api)"
         self.documentation = documentation
         self.sourceLocation = sourceLocation
+        self.endLocation = endLocation
     }
 
     public var name: String {
@@ -181,6 +183,7 @@ extension Symbol: Codable {
         case declaration
         case documentation
         case sourceLocation
+        case endLocation
 
         case associatedType
         case `case`
@@ -238,8 +241,9 @@ extension Symbol: Codable {
         let declaration = try container.decodeIfPresent(String.self, forKey: .declaration)
         let documentation = try container.decodeIfPresent(Documentation.self, forKey: .documentation)
         let sourceLocation = try container.decodeIfPresent(SourceLocation.self, forKey: .sourceLocation)
+        let endLocation = try container.decodeIfPresent(SourceLocation.self, forKey: .endLocation)
 
-        self.init(api: api, context: [] /* TODO */, declaration: declaration, documentation: documentation, sourceLocation: sourceLocation)
+        self.init(api: api, context: [] /* TODO */, declaration: declaration, documentation: documentation, sourceLocation: sourceLocation, endLocation: endLocation)
     }
 
     public func encode(to encoder: Encoder) throws {
