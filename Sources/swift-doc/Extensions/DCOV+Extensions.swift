@@ -21,7 +21,6 @@ extension Report {
     public init(module: Module) {
         let entries = module.sourceFiles
                             .flatMap { $0.symbols }
-                            .filter { $0.isPublic }
                             .map { Entry($0) }
 
         self.init(entries: entries)

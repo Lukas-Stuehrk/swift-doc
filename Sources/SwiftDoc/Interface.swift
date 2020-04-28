@@ -8,7 +8,7 @@ public final class Interface: Codable {
 
     public required init(imports: [Import], symbols: [Symbol]) {
         self.imports = imports
-        self.symbols = symbols.filter { $0.isPublic }
+        self.symbols = symbols
     }
 
     // MARK: -
