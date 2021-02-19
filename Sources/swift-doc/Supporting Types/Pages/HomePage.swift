@@ -7,6 +7,8 @@ struct HomePage: Page {
     var module: Module
     let baseURL: String
 
+    let guides: [CustomDocumentationPage]
+
     var classes: [Symbol] = []
     var enumerations: [Symbol] = []
     var structures: [Symbol] = []
@@ -16,9 +18,10 @@ struct HomePage: Page {
     var globalFunctions: [Symbol] = []
     var globalVariables: [Symbol] = []
 
-    init(module: Module, baseURL: String, symbolFilter: (Symbol) -> Bool) {
+    init(module: Module, baseURL: String, guides: [CustomDocumentationPage], symbolFilter: (Symbol) -> Bool) {
         self.module = module
         self.baseURL = baseURL
+        self.guides = guides
 
         for symbol in module.interface.topLevelSymbols.filter(symbolFilter) {
             switch symbol.api {
@@ -70,6 +73,12 @@ struct HomePage: Page {
                     }
                 }
             }
+            if !guides.isEmpty {
+                Heading { "Additional Guides" }
+                List(of: guides) { guide in
+                    Link(urlString: path(for: guide.name, with: baseURL), text: guide.title)
+                }
+            }
         }
     }
 
@@ -95,6 +104,17 @@ struct HomePage: Page {
             </section>
         """#
         })
+        <section id=additionalGuides>
+            <h2>Additional Guides</h2>
+            <ul>\#(guides.map { linkToGuide(page: $0, baseURL: baseURL) })</ul>
+        </section>
         """#
     }
 }
+
+private func linkToGuide(page: CustomDocumentationPage, baseURL: String) -> HTML {
+    #"""
+    <li><a href=\#(path(for: page.name, with: baseURL))>\#(page.title)</a></li>
+    """#
+}
+

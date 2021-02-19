@@ -39,6 +39,10 @@ extension SwiftDoc {
       @Option(name: .long,
               help: "The minimum access level of the symbols included in generated documentation.")
       var minimumAccessLevel: AccessLevel = .public
+
+      @Option(name: .long,
+              help: "A directory with additional commonmark documents which are included to the documentation output.")
+      var documentation: String?
     }
 
     static var configuration = CommandConfiguration(abstract: "Generates Swift documentation")
@@ -87,6 +91,28 @@ extension SwiftDoc {
             return
         }
 
+        var guides = [CustomDocumentationPage]()
+        additionalDocumentation: if let documentation = options.documentation {
+          guard let directoryEnumerator = fileManager.enumerator(at: URL(fileURLWithPath: documentation), includingPropertiesForKeys: nil) else {
+            logger.error("Could not read the additional documentation files. Does the directory '\(documentation)' exist?")
+            break additionalDocumentation
+          }
+          for case let documentUrl as URL in directoryEnumerator {
+            guard documentUrl.pathExtension == "md" else { continue }
+            let name = documentUrl.deletingPathExtension().lastPathComponent
+            if pages.keys.contains(name) {
+              logger.warning("Custom documentation '\(name)' overwrites generated documentation.")
+            }
+            do {
+              let guide = try CustomDocumentationPage(module: module, documentUrl: documentUrl, baseURL: baseURL)
+              pages[name] = guide
+              guides.append(guide)
+            } catch let error {
+              logger.error("\(error.localizedDescription)")
+            }
+          }
+        }
+
         if pages.count == 1, let page = pages.first?.value {
           let filename: String
           switch format {
@@ -101,11 +127,11 @@ extension SwiftDoc {
         } else {
           switch format {
           case .commonmark:
-            pages["Home"] = HomePage(module: module, baseURL: baseURL, symbolFilter: symbolFilter)
-            pages["_Sidebar"] = SidebarPage(module: module, baseURL: baseURL, symbolFilter: symbolFilter)
+            pages["Home"] = HomePage(module: module, baseURL: baseURL, guides: guides, symbolFilter: symbolFilter)
+            pages["_Sidebar"] = SidebarPage(module: module, baseURL: baseURL, guides: guides, symbolFilter: symbolFilter)
             pages["_Footer"] = FooterPage(baseURL: baseURL)
           case .html:
-            pages["Home"] = HomePage(module: module, baseURL: baseURL, symbolFilter: symbolFilter)
+            pages["Home"] = HomePage(module: module, baseURL: baseURL, guides: guides, symbolFilter: symbolFilter)
           }
 
           try pages.map { $0 }.parallelForEach {

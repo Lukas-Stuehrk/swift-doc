@@ -6,6 +6,8 @@ import HypertextLiteral
 struct SidebarPage: Page {
     var module: Module
     let baseURL: String
+    
+    let guides: [CustomDocumentationPage]
 
     var typeNames: Set<String> = []
     var protocolNames: Set<String> = []
@@ -14,9 +16,10 @@ struct SidebarPage: Page {
     var globalFunctionNames: Set<String> = []
     var globalVariableNames: Set<String> = []
 
-    init(module: Module, baseURL: String, symbolFilter: (Symbol) -> Bool) {
+    init(module: Module, baseURL: String, guides: [CustomDocumentationPage], symbolFilter: (Symbol) -> Bool) {
         self.module = module
         self.baseURL = baseURL
+        self.guides = guides
 
         for symbol in module.interface.topLevelSymbols.filter(symbolFilter) {
             switch symbol.api {
@@ -68,6 +71,20 @@ struct SidebarPage: Page {
 
                 List(of: section.names.sorted()) { name in
                     Link(urlString: path(for: name, with: baseURL), text: name)
+                }
+
+                Fragment { "</details>" }
+            }
+            if !guides.isEmpty {
+                Fragment {
+                    #"""
+                    <details>
+                    <summary>\#("Additional Guides")</summary>
+                    """#
+                }
+
+                List(of: guides) { guide in
+                    Link(urlString: path(for: guide.name, with: baseURL), text: guide.title)
                 }
 
                 Fragment { "</details>" }
